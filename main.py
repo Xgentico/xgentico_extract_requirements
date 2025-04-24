@@ -1,10 +1,11 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
+import pdfplumber
+import io
+import re
 
 app = FastAPI()
 
-# Allow all CORS for testing purposes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,12 +16,21 @@ app.add_middleware(
 
 @app.post("/extract_requirements")
 async def extract_requirements(file: UploadFile = File(...)):
-    # Simulated requirement extraction logic
+    contents = await file.read()
+    extracted_reqs = []
+
+    try:
+        with pdfplumber.open(io.BytesIO(contents)) as pdf:
+            full_text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+
+            for line in full_text.splitlines():
+                if re.search(r"\b(shall|must|required|submit|provide|mark|include)\b", line, re.IGNORECASE):
+                    extracted_reqs.append(line.strip())
+
+    except Exception as e:
+        return {"error": str(e)}
+
     return {
         "filename": file.filename,
-        "requirements": [
-            "Locate underground power lines",
-            "Scan site with GPR",
-            "Submit utility map within 48 hours"
-        ]
+        "requirements": extracted_reqs
     }

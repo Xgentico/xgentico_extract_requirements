@@ -1,2 +1,1 @@
-# Xgentico Extract Requirements API
-This is a starter FastAPI app for extracting RFP requirements.
+# Xgentico Extract Requirements (Live PDF Version)\nThis version parses uploaded PDFs to extract requirement-style lines.
